@@ -243,4 +243,17 @@ bot.on('message', async msg => {
     process.exit(0);
   }
 
+  if (command == 'volume') {
+    if (args.length === 0) {
+      msg.reply('Volume is ' + dispatcher.volume)
+    } else {
+      const volume = Number(args[0])
+      if (!isNaN(volume)) {
+        console.log('Setting volume to ' + volume + '...');
+        msg.reply('Setting volume to ' + volume + '...');
+        dispatcher.setVolume(volume)
+      }
+    }
+  }
+
 });
