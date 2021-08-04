@@ -151,7 +151,9 @@ bot.on('message', async msg => {
   if (msg.author.bot) return;
   if (!msg.guild) return;
   if (!msg.content.startsWith(config.prefix)) return;
-  let command = msg.content.split(' ')[0].slice(config.prefix.length);
+  const fullCommand = msg.content.split(' ')
+  const command = fullCommand[0].slice(config.prefix.length);
+  const args = fullCommand.slice(1).filter(arg => arg.length > 0)
 
   // Public allowed commands
 
