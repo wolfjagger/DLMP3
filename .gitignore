@@ -1,6 +1,6 @@
 config.json
 node_modules
 yarn.lock
-music/*.mp3
+music
 package-lock.json
 now-playing.txt
