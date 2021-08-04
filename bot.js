@@ -21,6 +21,7 @@
 import fs from 'fs';
 import path from 'path'
 import Discord from 'discord.js';
+import { parse } from "discord-command-parser";
 import meow from 'meow'
 
 
@@ -53,6 +54,8 @@ const cli = meow(`
 
 const bot = new Discord.Client();
 
+let isRandom = cli.flags.random;
+let songs = path.resolve(cli.flags.songs);
 let dispatcher = null;
 let songName = '';
 let songIdx = -1;
@@ -62,8 +65,8 @@ bot.login(config.token);
 
 function searchForSong() {
   console.log('Searching .mp3 or .flac file...');
-  const files = fs.readdirSync(cli.flags.songs);
-  songIdx = (cli.flags.random) ? Math.floor(Math.random() * files.length) : songIdx + 1;
+  const files = fs.readdirSync(songs);
+  songIdx = (isRandom) ? Math.floor(Math.random() * files.length) : songIdx + 1;
   if (songIdx >= files.length) songIdx = 0;
   const audio = songIdx < files.length ? files[songIdx] : ''
   if (audio.search(/\.(?:mp3|flac)/)) return audio
@@ -83,7 +86,7 @@ function playAudio() {
         setTimeout(searchAndWait, 1000)
       } else {
 
-        dispatcher = connection.play(path.resolve(cli.flags.songs, songName));
+        dispatcher = connection.play(path.resolve(songs, songName));
 
         dispatcher.on('start', () => {
 
@@ -150,10 +153,12 @@ bot.on('message', async msg => {
 
   if (msg.author.bot) return;
   if (!msg.guild) return;
-  if (!msg.content.startsWith(config.prefix)) return;
-  const fullCommand = msg.content.split(' ')
-  const command = fullCommand[0].slice(config.prefix.length);
-  const args = fullCommand.slice(1).filter(arg => arg.length > 0)
+
+  const parsed = parse(msg, config.prefix, { allowSpaceBeforeCommand: true });
+  if (!parsed.success) return;
+
+  const command = parsed.command
+  const args = parsed.arguments
 
   // Public allowed commands
 
@@ -248,7 +253,7 @@ bot.on('message', async msg => {
   }
 
   if (command == 'volume') {
-    if (args.length === 0) {
+    if (!args?.length) {
       msg.reply('Volume is ' + dispatcher.volume)
     } else {
       const volume = Number(args[0])
@@ -257,6 +262,19 @@ bot.on('message', async msg => {
         msg.reply('Setting volume to ' + volume + '...');
         dispatcher.setVolume(volume)
       }
+    }
+  }
+
+  if (command == 'songs') {
+    if (!args?.length) {
+      msg.reply('Song directory is ' + songs)
+    } else {
+      const newSongs = path.resolve(args[0])
+      console.log('Setting song dir to ' + newSongs + '...');
+      msg.reply('Setting song dir to ' + newSongs + '...');
+      songs = newSongs
+      songIdx = -1
+      playAudio()
     }
   }
 

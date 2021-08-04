@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@discordjs/opus": "^0.3.2",
+    "discord-command-parser": "^1.5.3",
     "discord.js": "^12.2.0",
     "ffmpeg-static": "^4.2.5",
     "meow": "^10.1.1"
