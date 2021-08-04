@@ -38,7 +38,8 @@ const cli = meow(`
       alias: 's',
       description: 'song directory',
       type: 'string',
-      default: './music'
+      default: './music',
+      required: true
     },
     random: {
       alias: 'r',
@@ -59,6 +60,7 @@ let songIdx = -1;
 
 bot.login(config.token);
 
+
 function searchForSong() {
   console.log('Searching .mp3 or .flac file...');
   const files = fs.readdirSync(cli.flags.songs);
@@ -76,32 +78,37 @@ function playAudio() {
   
   voiceChannel.join().then(connection => {
 
-    while (true) {
+    const searchAndWait = () => {
       audio = searchForSong()
-      if (audio != null) break
+      if (audio == null) {
+        setTimeout(searchAndWait, 1000)
+      } else {
+
+        dispatcher = connection.play(path.resolve(cli.flags.songs, audio));
+
+        dispatcher.on('start', () => {
+
+          console.log('Now playing ' + audio);
+          const statusEmbed = new Discord.MessageEmbed()
+            .addField('Now Playing', `${audio}`)
+            .setColor('#0066ff')
+
+          const statusChannel = bot.channels.cache.get(config.statusChannel);
+          if (!statusChannel) return console.error('The status channel does not exist! Skipping.');
+          statusChannel.send(statusEmbed);
+
+        });
+
+        dispatcher.on('error', console.error);
+
+        dispatcher.on('finish', () => {
+          console.log('Music has finished playing.');
+          playAudio();
+        });
+      }
     }
 
-    dispatcher = connection.play(path.resolve(cli.flags.songs, audio));
-    
-    dispatcher.on('start', () => {
-
-      console.log('Now playing ' + audio);
-      const statusEmbed = new Discord.MessageEmbed()
-        .addField('Now Playing', `${audio}`)
-        .setColor('#0066ff')
-
-      const statusChannel = bot.channels.cache.get(config.statusChannel);
-      if (!statusChannel) return console.error('The status channel does not exist! Skipping.');
-      statusChannel.send(statusEmbed);
-
-    });
-    
-    dispatcher.on('error', console.error);
-
-    dispatcher.on('finish', () => {
-      console.log('Music has finished playing.');
-      playAudio();
-    });
+    searchAndWait()
     
   }).catch(e => {
     console.error(e);
