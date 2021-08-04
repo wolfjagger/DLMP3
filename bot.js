@@ -55,23 +55,30 @@ const bot = new Discord.Client();
 let dispatcher;
 let audio;
 let voiceChannel;
-let fileData;
+let songIdx = -1;
 
 bot.login(config.token);
 
+function searchForSong() {
+  console.log('Searching .mp3 or .flac file...');
+  const files = fs.readdirSync(cli.flags.songs);
+  songIdx = (cli.flags.random) ? Math.floor(Math.random() * files.length) : songIdx + 1;
+  if (songIdx >= files.length) songIdx = 0;
+  const audio = songIdx < files.length ? files[songIdx] : ''
+  if (audio.search(/\.(?:mp3|flac)/)) return audio
+  else return null
+}
+
 function playAudio() {
+
   voiceChannel = bot.channels.cache.get(config.voiceChannel);
   if (!voiceChannel) return console.error('The voice channel does not exist!\n(Have you looked at your configuration?)');
   
   voiceChannel.join().then(connection => {
-    let files = fs.readdirSync('./music');
 
     while (true) {
-      audio = files[Math.floor(Math.random() * files.length)];
-      console.log('Searching .mp3 file...');
-      if (audio.endsWith('.mp3')) {
-        break;
-      }
+      audio = searchForSong()
+      if (audio != null) break
     }
 
     dispatcher = connection.play(path.resolve(cli.flags.songs, audio));
