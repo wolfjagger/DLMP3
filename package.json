@@ -2,14 +2,16 @@
   "name": "DLMP3",
   "version": "1.0.0",
   "main": "bot.js",
+  "type": "module",
   "license": "GPL-3.0",
   "scripts": {
-    "dev": "nodemon bot.js"
+    "dev": "node bot.js"
   },
   "dependencies": {
     "@discordjs/opus": "^0.3.2",
     "discord.js": "^12.2.0",
-    "ffmpeg-static": "^4.2.5"
+    "ffmpeg-static": "^4.2.5",
+    "meow": "^10.1.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.4"
