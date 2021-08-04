@@ -25,11 +25,6 @@ import { parse } from "discord-command-parser";
 import meow from 'meow'
 
 
-// parse JSON string to JSON object
-const data = fs.readFileSync('./config.json', 'utf-8')
-const config = JSON.parse(data);
-
-
 const cli = meow(`
   Bot to play music for Odyssey
 `, {
@@ -47,9 +42,21 @@ const cli = meow(`
       description: 'randomized play',
       type: 'boolean',
       default: false
+    },
+    config: {
+      alias: 'c',
+      description: 'config json file',
+      type: 'string',
+      default: './config.json',
+      required: true
     }
   }
 })
+
+
+// parse JSON string to JSON object
+const data = fs.readFileSync(path.resolve(cli.flags.config), 'utf-8')
+const config = JSON.parse(data);
 
 
 const bot = new Discord.Client();
@@ -123,9 +130,6 @@ bot.on('ready', () => {
   console.log('Bot is ready!');
   console.log(`Logged in as ${bot.user.tag}!`);
   console.log(`Prefix: ${config.prefix}`);
-  console.log(`Owner ID: ${config.botOwner}`);
-  console.log(`Voice Channel: ${config.voiceChannel}`);
-  console.log(`Status Channel: ${config.statusChannel}\n`);
 
   bot.user.setPresence({
     activity: {
