@@ -53,9 +53,8 @@ const cli = meow(`
 
 const bot = new Discord.Client();
 
-let dispatcher;
-let audio;
-let voiceChannel;
+let dispatcher = null;
+let songName = '';
 let songIdx = -1;
 
 bot.login(config.token);
@@ -73,24 +72,24 @@ function searchForSong() {
 
 function playAudio() {
 
-  voiceChannel = bot.channels.cache.get(config.voiceChannel);
+  const voiceChannel = bot.channels.cache.get(config.voiceChannel);
   if (!voiceChannel) return console.error('The voice channel does not exist!\n(Have you looked at your configuration?)');
   
   voiceChannel.join().then(connection => {
 
     const searchAndWait = () => {
-      audio = searchForSong()
-      if (audio == null) {
+      songName = searchForSong()
+      if (songName == null) {
         setTimeout(searchAndWait, 1000)
       } else {
 
-        dispatcher = connection.play(path.resolve(cli.flags.songs, audio));
+        dispatcher = connection.play(path.resolve(cli.flags.songs, songName));
 
         dispatcher.on('start', () => {
 
-          console.log('Now playing ' + audio);
+          console.log('Now playing ' + songName);
           const statusEmbed = new Discord.MessageEmbed()
-            .addField('Now Playing', `${audio}`)
+            .addField('Now Playing', `${songName}`)
             .setColor('#0066ff')
 
           const statusChannel = bot.channels.cache.get(config.statusChannel);
@@ -163,7 +162,7 @@ bot.on('message', async msg => {
 
     const helpEmbed = new Discord.MessageEmbed()
       .setAuthor(`${bot.user.username} Help`, bot.user.avatarURL())
-      .setDescription(`Currently playing \`${audio}\`.`)
+      .setDescription(`Currently playing \`${songName}\`.`)
       .addField('Public Commands', `${config.prefix}help\n${config.prefix}ping\n${config.prefix}git\n${config.prefix}playing\n${config.prefix}about\n`, true)
       .addField('Bot Owner Only', `${config.prefix}join\n${config.prefix}resume\n${config.prefix}pause\n${config.prefix}skip\n${config.prefix}leave\n${config.prefix}stop\n`, true)
       .setFooter('© Copyright 2020 Andrew Lee. Licensed with GPL-3.0.')
@@ -182,7 +181,7 @@ bot.on('message', async msg => {
   }
 
   if (command == 'playing') {
-    msg.channel.send('Currently playing `' + audio + '`.');
+    msg.channel.send('Currently playing `' + songName + '`.');
   }
   
   if (command == 'about') {
@@ -210,7 +209,7 @@ bot.on('message', async msg => {
   }
 
   if (command == 'skip') {
-    msg.reply('Skipping `' + audio + '`...');
+    msg.reply('Skipping `' + songName + '`...');
     dispatcher.pause();
     dispatcher = null;
     playAudio();
@@ -218,11 +217,11 @@ bot.on('message', async msg => {
 
   if (command == 'leave') {
 
-    voiceChannel = bot.channels.cache.get(config.voiceChannel);
+    const voiceChannel = bot.channels.cache.get(config.voiceChannel);
     if (!voiceChannel) return console.error('The voice channel does not exist!\n(Have you looked at your configuration?)');
     msg.reply('Leaving voice channel.');
     console.log('Leaving voice channel.');
-    audio = "Not Playing";
+    songName = "Not Playing";
     dispatcher.destroy();
     voiceChannel.leave();
   }
