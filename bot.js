@@ -18,10 +18,40 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * 
  ***************************************************************************/
-const Discord = require('discord.js');
-const fs = require('fs');
+import fs from 'fs';
+import path from 'path'
+import Discord from 'discord.js';
+import meow from 'meow'
+
+
+// parse JSON string to JSON object
+const data = fs.readFileSync('./config.json', 'utf-8')
+const config = JSON.parse(data);
+
+
+const cli = meow(`
+  Bot to play music for Odyssey
+`, {
+  importMeta: import.meta,
+  flags: {
+    songs: {
+      alias: 's',
+      description: 'song directory',
+      type: 'string',
+      default: './music'
+    },
+    random: {
+      alias: 'r',
+      description: 'randomized play',
+      type: 'boolean',
+      default: false
+    }
+  }
+})
+
+
 const bot = new Discord.Client();
-const config = require('./config.json');
+
 let dispatcher;
 let audio;
 let voiceChannel;
@@ -44,9 +74,10 @@ function playAudio() {
       }
     }
 
-    dispatcher = connection.play('./music/' + audio);
+    dispatcher = connection.play(path.resolve(cli.flags.songs, audio));
     
     dispatcher.on('start', () => {
+
       console.log('Now playing ' + audio);
       fileData = "Now Playing: " + audio;
       fs.writeFile("now-playing.txt", fileData, (err) => { 
@@ -57,9 +88,10 @@ function playAudio() {
       .addField('Now Playing', `${audio}`)
       .setColor('#0066ff')
 
-      let statusChannel = bot.channels.cache.get(config.statusChannel);
+      const statusChannel = bot.channels.cache.get(config.statusChannel);
       if (!statusChannel) return console.error('The status channel does not exist! Skipping.');
       statusChannel.send(statusEmbed);
+
     });
     
     dispatcher.on('error', console.error);
@@ -76,6 +108,7 @@ function playAudio() {
 }
 
 bot.on('ready', () => {
+
   console.log('Bot is ready!');
   console.log(`Logged in as ${bot.user.tag}!`);
   console.log(`Prefix: ${config.prefix}`);
@@ -95,14 +128,16 @@ bot.on('ready', () => {
   .setDescription('Starting bot...')
   .setColor('#0066ff')
 
-  let statusChannel = bot.channels.cache.get(config.statusChannel);
+  const statusChannel = bot.channels.cache.get(config.statusChannel);
   if (!statusChannel) return console.error('The status channel does not exist! Skipping.');
   statusChannel.send(readyEmbed);
   console.log('Connected to the voice channel.');
   playAudio();
+
 });
 
 bot.on('message', async msg => {
+
   if (msg.author.bot) return;
   if (!msg.guild) return;
   if (!msg.content.startsWith(config.prefix)) return;
@@ -122,6 +157,7 @@ bot.on('message', async msg => {
     .setColor('#0066ff')
 
     msg.channel.send(helpEmbed);
+
   }
 
   if (command == 'ping') {
