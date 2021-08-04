@@ -211,9 +211,13 @@ bot.on('message', async msg => {
   }
 
   if (command == 'skip') {
-    msg.reply('Skipping `' + songName + '`...');
     dispatcher.pause();
-    dispatcher = null;
+    if (args.length === 0) {
+      msg.reply('Skipping `' + songName + '`...');
+    } else {
+      songIdx += Math.round(args[0]) - 1
+      msg.reply('Skipping `' + args[0] + '` songs...');
+    }
     playAudio();
   }
 
