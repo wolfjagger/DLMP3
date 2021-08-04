@@ -86,14 +86,9 @@ function playAudio() {
     dispatcher.on('start', () => {
 
       console.log('Now playing ' + audio);
-      fileData = "Now Playing: " + audio;
-      fs.writeFile("now-playing.txt", fileData, (err) => { 
-      if (err) 
-      console.log(err); 
-      }); 
       const statusEmbed = new Discord.MessageEmbed()
-      .addField('Now Playing', `${audio}`)
-      .setColor('#0066ff')
+        .addField('Now Playing', `${audio}`)
+        .setColor('#0066ff')
 
       const statusChannel = bot.channels.cache.get(config.statusChannel);
       if (!statusChannel) return console.error('The status channel does not exist! Skipping.');
@@ -128,12 +123,14 @@ bot.on('ready', () => {
       name: `Music | ${config.prefix}help`
     },
     status: 'online',
-  }).then(presence => console.log(`Activity set to "${presence.activities[0].name}"`)).catch(console.error);
+  }).then(
+    presence => console.log(`Activity set to "${presence.activities[0].name}"`)
+  ).catch(console.error);
 
   const readyEmbed = new Discord.MessageEmbed()
-  .setAuthor(`${bot.user.username}`, bot.user.avatarURL())
-  .setDescription('Starting bot...')
-  .setColor('#0066ff')
+    .setAuthor(`${bot.user.username}`, bot.user.avatarURL())
+    .setDescription('Starting bot...')
+    .setColor('#0066ff')
 
   const statusChannel = bot.channels.cache.get(config.statusChannel);
   if (!statusChannel) return console.error('The status channel does not exist! Skipping.');
@@ -148,20 +145,22 @@ bot.on('message', async msg => {
   if (msg.author.bot) return;
   if (!msg.guild) return;
   if (!msg.content.startsWith(config.prefix)) return;
-  let command = msg.content.split(' ')[0];
-  command = command.slice(config.prefix.length);
+  let command = msg.content.split(' ')[0].slice(config.prefix.length);
 
   // Public allowed commands
 
   if (command == 'help') {
-    if (!msg.guild.member(bot.user).hasPermission('EMBED_LINKS')) return msg.reply('**ERROR: This bot doesn\'t have the permission to send embed links please enable them to use the full help.**');
+
+    if (!msg.guild.member(bot.user).hasPermission('EMBED_LINKS'))
+      return msg.reply('**ERROR: This bot doesn\'t have the permission to send embed links please enable them to use the full help.**');
+
     const helpEmbed = new Discord.MessageEmbed()
-    .setAuthor(`${bot.user.username} Help`, bot.user.avatarURL())
-    .setDescription(`Currently playing \`${audio}\`.`)
-    .addField('Public Commands', `${config.prefix}help\n${config.prefix}ping\n${config.prefix}git\n${config.prefix}playing\n${config.prefix}about\n`, true)
-    .addField('Bot Owner Only', `${config.prefix}join\n${config.prefix}resume\n${config.prefix}pause\n${config.prefix}skip\n${config.prefix}leave\n${config.prefix}stop\n`, true)
-    .setFooter('© Copyright 2020 Andrew Lee. Licensed with GPL-3.0.')
-    .setColor('#0066ff')
+      .setAuthor(`${bot.user.username} Help`, bot.user.avatarURL())
+      .setDescription(`Currently playing \`${audio}\`.`)
+      .addField('Public Commands', `${config.prefix}help\n${config.prefix}ping\n${config.prefix}git\n${config.prefix}playing\n${config.prefix}about\n`, true)
+      .addField('Bot Owner Only', `${config.prefix}join\n${config.prefix}resume\n${config.prefix}pause\n${config.prefix}skip\n${config.prefix}leave\n${config.prefix}stop\n`, true)
+      .setFooter('© Copyright 2020 Andrew Lee. Licensed with GPL-3.0.')
+      .setColor('#0066ff')
 
     msg.channel.send(helpEmbed);
 
@@ -211,15 +210,11 @@ bot.on('message', async msg => {
   }
 
   if (command == 'leave') {
+
     voiceChannel = bot.channels.cache.get(config.voiceChannel);
     if (!voiceChannel) return console.error('The voice channel does not exist!\n(Have you looked at your configuration?)');
     msg.reply('Leaving voice channel.');
     console.log('Leaving voice channel.');
-    fileData = "Now Playing: Nothing";
-    fs.writeFile("now-playing.txt", fileData, (err) => { 
-    if (err) 
-    console.log(err); 
-    }); 
     audio = "Not Playing";
     dispatcher.destroy();
     voiceChannel.leave();
@@ -227,16 +222,11 @@ bot.on('message', async msg => {
 
   if (command == 'stop') {
     await msg.reply('Powering off...');
-    fileData = "Now Playing: Nothing";
-    await fs.writeFile("now-playing.txt", fileData, (err) => { 
-    if (err) 
-    console.log(err); 
-    }); 
     const statusEmbed = new Discord.MessageEmbed()
-    .setAuthor(`${bot.user.username}`, bot.user.avatarURL())
-    .setDescription(`That\'s all folks! Powering down ${bot.user.username}...`)
-    .setColor('#0066ff')
-    let statusChannel = bot.channels.cache.get(config.statusChannel);
+      .setAuthor(`${bot.user.username}`, bot.user.avatarURL())
+      .setDescription(`That\'s all folks! Powering down ${bot.user.username}...`)
+      .setColor('#0066ff')
+    const statusChannel = bot.channels.cache.get(config.statusChannel);
     if (!statusChannel) return console.error('The status channel does not exist! Skipping.');
     await statusChannel.send(statusEmbed);
     console.log('Powering off...');
