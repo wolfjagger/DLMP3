@@ -66,6 +66,9 @@ let songs = path.resolve(cli.flags.songs);
 let dispatcher = null;
 let songName = '';
 let songIdx = -1;
+let volume = (
+  config.startingVolume && !isNaN(Number(config.startingVolume))
+) ? Number(config.startingVolume) : 1
 
 bot.login(config.token);
 
@@ -93,7 +96,8 @@ function playAudio() {
         setTimeout(searchAndWait, 1000)
       } else {
 
-        dispatcher = connection.play(path.resolve(songs, songName));
+        if (volume) console.log('Setting volume to ' + volume)
+        dispatcher = connection.play(path.resolve(songs, songName), { volume });
 
         dispatcher.on('start', () => {
 
@@ -258,12 +262,13 @@ bot.on('message', async msg => {
 
   if (command == 'volume') {
     if (!args?.length) {
-      msg.reply('Volume is ' + dispatcher.volume)
+      msg.reply('Volume is ' + volume)
     } else {
-      const volume = Number(args[0])
-      if (!isNaN(volume)) {
-        console.log('Setting volume to ' + volume + '...');
-        msg.reply('Setting volume to ' + volume + '...');
+      const newVolume = Number(args[0])
+      if (!isNaN(newVolume)) {
+        console.log('Setting volume to ' + newVolume + '...');
+        msg.reply('Setting volume to ' + newVolume + '...');
+        volume = newVolume
         dispatcher.setVolume(volume)
       }
     }
